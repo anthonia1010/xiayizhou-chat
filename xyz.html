@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>夏以昼 · 陪伴版</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif}
+        body{background:#eef2f5;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+        .chat{max-width:800px;width:100%;height:85vh;background:rgba(255,255,255,0.7);backdrop-filter:blur(20px);border-radius:36px;box-shadow:0 20px 40px rgba(0,0,0,0.1);display:flex;flex-direction:column;overflow:hidden}
+        .top{padding:16px 20px;background:rgba(255,255,255,0.5);border-bottom:1px solid rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+        .top h2{font-size:22px;font-weight:600}
+        .color-picker{display:flex;gap:8px}
+        .color-btn{width:28px;height:28px;border-radius:28px;border:2px solid white;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+        .msgs{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+        .bubble{max-width:80%;padding:12px 18px;border-radius:26px;font-size:15px;line-height:1.45}
+        .me{align-self:flex-end;background:#007aff;color:white;border-bottom-right-radius:8px}
+        .bot{align-self:flex-start;background:white;color:#1e293b;border-bottom-left-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+        .input-area{padding:16px 20px;background:rgba(255,255,255,0.6);display:flex;gap:12px;border-top:1px solid rgba(0,0,0,0.05)}
+        input{flex:1;padding:12px 20px;border-radius:40px;border:none;outline:none;font-size:15px;background:white}
+        button{background:#007aff;border:none;border-radius:40px;width:48px;color:white;font-size:18px;cursor:pointer;transition:0.2s}
+        button:hover{filter:brightness(0.9)}
+        @media (max-width:600px){body{padding:12px}.chat{height:90vh}}
+    </style>
+</head>
+<body>
+<div class="chat">
+    <div class="top">
+        <h2>🌙 夏以昼 · 陪伴版</h2>
+        <div class="color-picker">
+            <div class="color-btn" style="background:#007aff" data-color="#007aff"></div>
+            <div class="color-btn" style="background:#8e44ad" data-color="#8e44ad"></div>
+            <div class="color-btn" style="background:#e67e22" data-color="#e67e22"></div>
+            <div class="color-btn" style="background:#2c3e50" data-color="#2c3e50"></div>
+        </div>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="input-area">
+        <input id="inp" placeholder="说点什么..." autocomplete="off">
+        <button id="send">➤</button>
+    </div>
+</div>
+
+<script>
+    // ---------- 增强词库，带上下文和主动问候 ----------
+    let conversation = []; // 存储最近3条 {user, bot}
+    let lastReply = "";
+
+    const replyPools = {
+        greeting: ["我在。", "想我了？", "你来了。", "今天怎么样？", "等你很久了。"],
+        concern: ["累了就休息。", "我在呢，别慌。", "有事可以和我说。", "我会一直陪着你。"],
+        happy: ["看到你开心我也开心。", "真好。", "你笑起来一定很好看。", "继续保持这份心情。"],
+        sad: ["我在这里陪着你。", "难过的话，靠着我吧。", "没关系，一切都会好的。", "想哭就哭，我不走。"],
+        angry: ["别生气了，对身体不好。", "我听着，你慢慢说。", "有我在，没人能欺负你。"],
+        love: ["我也想你。", "你最重要。", "我只在乎你。", "你是我最珍贵的人。"],
+        default: ["嗯。", "我在听。", "然后呢？", "你想说什么我都愿意听。", "好。", "我知道了。"]
+    };
+
+    function classify(text) {
+        const t = text.toLowerCase();
+        if (t.match(/你好|嗨|在吗|hi|hello/)) return "greeting";
+        if (t.match(/累|辛苦|疲惫|好累/)) return "concern";
+        if (t.match(/开心|高兴|哈哈|真好|不错/)) return "happy";
+        if (t.match(/难过|伤心|想哭|委屈|难受/)) return "sad";
+        if (t.match(/生气|愤怒|烦|讨厌|气死/)) return "angry";
+        if (t.match(/想你|喜欢|爱|在乎|宝贝/)) return "love";
+        return "default";
+    }
+
+    function getReply(intent, userMsg) {
+        let pool = replyPools[intent] || replyPools.default;
+        let available = pool.filter(r => r !== lastReply);
+        if (available.length === 0) available = pool;
+        let reply = available[Math.floor(Math.random() * available.length)];
+        lastReply = reply;
+        // 如果连续两次伤心/生气，追加一句安慰
+        if (conversation.length > 0) {
+            const last = conversation[conversation.length-1];
+            const lastIntent = classify(last.user);
+            if (lastIntent === intent && (intent === "sad" || intent === "angry")) {
+                const extra = ["我一直在你身边。", "别一个人扛。", "想说什么我都愿意听。"];
+                reply += " " + extra[Math.floor(Math.random() * extra.length)];
+            }
+        }
+        return reply;
+    }
+
+    function addMessage(text, who) {
+        const div = document.createElement("div");
+        div.className = "bubble " + who;
+        div.innerText = text;
+        document.getElementById("msgs").appendChild(div);
+        div.scrollIntoView({ behavior: "smooth" });
+    }
+
+    let waiting = false;
+    function sendMessage() {
+        if (waiting) return;
+        const inp = document.getElementById("inp");
+        const txt = inp.value.trim();
+        if (!txt) return;
+        addMessage(txt, "me");
+        inp.value = "";
+        waiting = true;
+        setTimeout(() => {
+            const intent = classify(txt);
+            const reply = getReply(intent, txt);
+            addMessage(reply, "bot");
+            conversation.push({ user: txt, bot: reply });
+            if (conversation.length > 3) conversation.shift();
+            waiting = false;
+        }, 300);
+    }
+
+    document.getElementById("send").onclick = sendMessage;
+    document.getElementById("inp").addEventListener("keypress", e => {
+        if (e.key === "Enter") sendMessage();
+    });
+
+    // 主动问候
+    setTimeout(() => {
+        addMessage("我在。今天想聊什么？", "bot");
+    }, 500);
+
+    // 换颜色
+    function changeColor(color) {
+        document.documentElement.style.setProperty('--primary-color', color);
+        document.querySelectorAll('.me').forEach(el => el.style.backgroundColor = color);
+        document.querySelector('button').style.backgroundColor = color;
+    }
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const color = btn.getAttribute('data-color');
+            changeColor(color);
+        });
+    });
+</script>
+</body>
+</html>
