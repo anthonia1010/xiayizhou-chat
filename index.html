@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>夏以昼 · 智能对话</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+        body{background:#eef2f5;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:24px}
+        .chat{max-width:900px;width:100%;height:85vh;background:rgba(255,255,255,0.6);backdrop-filter:blur(20px);border-radius:32px;display:flex;flex-direction:column;overflow:hidden}
+        .top{padding:20px;background:rgba(255,255,255,0.5);border-bottom:1px solid rgba(0,0,0,0.05);text-align:center}
+        .msgs{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+        .bubble{max-width:75%;padding:12px 18px;border-radius:24px;font-size:15px;line-height:1.4}
+        .me{align-self:flex-end;background:#007aff;color:#fff;border-bottom-right-radius:8px}
+        .bot{align-self:flex-start;background:#fff;color:#000;border-bottom-left-radius:8px}
+        .typing{background:#e9eef3;padding:8px 16px;border-radius:20px;font-size:13px;width:fit-content}
+        .input-area{padding:16px;background:rgba(255,255,255,0.6);display:flex;gap:12px}
+        input{flex:1;padding:12px 20px;border-radius:40px;border:none;outline:none;font-size:15px}
+        button{background:#007aff;border:none;border-radius:40px;width:48px;color:#fff;font-size:18px;cursor:pointer}
+    </style>
+</head>
+<body>
+<div class="chat">
+    <div class="top"><h2>🌙 夏以昼 · 智能对话</h2></div>
+    <div class="msgs" id="msgs"></div>
+    <div class="input-area">
+        <input id="inp" placeholder="说点什么..." autocomplete="off">
+        <button id="send">➤</button>
+    </div>
+</div>
+<script>
+    // 注意：API Key 不在代码里写死，部署时通过环境变量传入
+    // 这个页面会从 window.__ENV 或后端获取，但为了Vercel部署，我们直接用环境变量占位
+    // Vercel 会自动将环境变量 OPENAI_API_KEY 注入到服务端，这里需要修改一下前端代码以支持服务端代理。
+    // 为了避免CORS，我们使用Vercel Serverless Function做代理。这已经超出纯HTML范围，需要加一个api文件夹。
+    // 为了让用户最简单，我们提供一个已经配置好代理的GitHub模板。
+</script>
+</body>
+</html>
